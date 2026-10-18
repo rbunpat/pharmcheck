@@ -8,8 +8,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Loaded from the Google Fonts CDN in app/layout.tsx */
+  --font-sans: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +20,34 @@
   }
 }
 
+/*
+ * Hard override: force IBM Plex Sans Thai on literally every element.
+ * This intentionally beats Tailwind's font-* utilities (including font-mono)
+ * and the UA default font of form controls, so nothing can opt out.
+ * The webfont itself is loaded from the Google Fonts CDN in app/layout.tsx.
+ */
+html,
+body,
+*,
+*::before,
+*::after {
+  font-family: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Form controls don't inherit font-family from their parent by default. */
+button,
+input,
+select,
+textarea,
+optgroup,
+code,
+pre,
+kbd,
+samp {
+  font-family: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
