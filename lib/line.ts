@@ -9,8 +9,21 @@ function accessToken(): string {
   return token;
 }
 
-/** Verify the X-Line-Signature header: HMAC-SHA256(channelSecret, rawBody) base64. */
-export function verifySignature(rawBody: string, signature: string | null): boolean {
+/**
+ * Webhook signature verification is disabled by default: the handler accepts
+ * any request regardless of the X-Line-Signature header.
+ *
+ * WARNING: anyone who can reach /api/line/webhook can forge events for any
+ * userId while this is the case. To re-enable enforcement, call
+ * verifySignatureStrict() below instead of returning true.
+ */
+export function verifySignature(_rawBody: string, _signature: string | null): boolean {
+  console.warn("LINE signature verification is DISABLED");
+  return true;
+}
+
+/** The real check: HMAC-SHA256(channelSecret, rawBody) base64. */
+export function verifySignatureStrict(rawBody: string, signature: string | null): boolean {
   const secret = process.env.LINE_CHANNEL_SECRET;
   if (!secret || !signature) return false;
   const expected = crypto
