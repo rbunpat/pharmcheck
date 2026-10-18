@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -64,6 +65,28 @@ export default function Home() {
           </a>
         </div>
       </main>
+      <section className="flex flex-col gap-6 items-center justify-center p-8 text-center">
+        <h1 className="text-3xl font-bold text-zinc-900">PharmCheck</h1>
+        <p className="text-base leading-7 text-zinc-600">
+          ส่งรูปบรรจุภัณฑ์ยาผ่าน LINE OA เพื่อตรวจสอบทะเบียน อย.
+          ข้อมูลยา และเตือนการแพ้ยาของคุณ
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/test"
+            className="flex h-12 items-center justify-center rounded-full bg-emerald-600 px-6 font-semibold text-white hover:bg-emerald-700"
+          >
+            หน้าทดสอบระบบ
+          </Link>
+          <Link
+            href="/liff/profile"
+            className="flex h-12 items-center justify-center rounded-full border border-zinc-300 bg-white px-6 font-semibold text-zinc-700 hover:bg-zinc-100"
+          >
+            หน้าลงทะเบียนการแพ้ยา (LIFF)
+          </Link>
+        </div>
+        <p className="text-xs text-zinc-400">ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์</p>
+      </section>
     </div>
   );
 }
