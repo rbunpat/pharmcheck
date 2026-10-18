@@ -4,20 +4,50 @@ import { requireDb } from "@/lib/db";
 import { allergies, users } from "@/lib/db/schema";
 import { PRESET_ALLERGIES } from "@/lib/allergens";
 
+/**
+ * The LINE Login channel that owns the LIFF app. A LIFF ID is
+ * `{channelId}-{suffix}`, so its prefix is the authoritative channel ID for
+ * verifying ID tokens issued to the LIFF app. `LINE_CHANNEL_ID` is only a
+ * fallback for setups where the LIFF ID isn't available at runtime.
+ */
+function loginChannelId(): string | undefined {
+  return (
+    process.env.LIFF_ID?.split("-")[0] ||
+    process.env.NEXT_PUBLIC_LIFF_ID?.split("-")[0] ||
+    process.env.LINE_CHANNEL_ID
+  );
+}
+
 async function verifyIdToken(idToken: string): Promise<string | null> {
-  const channelId = process.env.LINE_CHANNEL_ID ?? process.env.LIFF_ID?.split("-")[0];
-  if (!idToken || !channelId) return null;
+  const channelId = loginChannelId();
+  if (!idToken || !channelId) {
+    console.error("verifyIdToken: missing ID token or LINE Login channel ID");
+    return null;
+  }
   try {
     const res = await fetch("https://api.line.me/oauth2/v2.1/verify", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ id_token: idToken, client_id: channelId }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(
+        `verifyIdToken: LINE verify failed (${res.status}): ${await res
+          .text()
+          .catch(() => "")}`,
+      );
+      return null;
+    }
     const data = (await res.json()) as { sub?: string; aud?: string };
-    if (data.aud !== channelId || !data.sub) return null;
+    if (data.aud !== channelId || !data.sub) {
+      console.error(
+        `verifyIdToken: audience mismatch (aud=${data.aud}, expected=${channelId})`,
+      );
+      return null;
+    }
     return data.sub;
-  } catch {
+  } catch (err) {
+    console.error("verifyIdToken: request failed", err);
     return null;
   }
 }
