@@ -24,9 +24,9 @@ export default function LiffProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const load = useCallback(async (accessToken: string) => {
+  const load = useCallback(async (idToken: string) => {
     const res = await fetch("/api/profile", {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: `Bearer ${idToken}` },
     });
     if (!res.ok) throw new Error("โหลดข้อมูลไม่สำเร็จ");
     const data = (await res.json()) as { allergies: Allergy[]; presets: Preset[] };
@@ -50,9 +50,19 @@ export default function LiffProfilePage() {
           liff.login();
           return;
         }
-        const token = liff.getAccessToken();
-        if (!token) throw new Error("ไม่พบ access token");
-        await load(token);
+        await liff.ready;
+        const idToken = await new Promise<string | null>((resolve) => {
+          let attempts = 0;
+          const tick = () => {
+            const t = liff.getIDToken();
+            if (t) return resolve(t);
+            if (++attempts >= 10) return resolve(null);
+            setTimeout(tick, 300);
+          };
+          tick();
+        });
+        if (!idToken) throw new Error("ไม่พบ access token");
+        await load(idToken);
         setStatus("ready");
       })
       .catch((err: unknown) => {
@@ -75,7 +85,8 @@ export default function LiffProfilePage() {
     setSaving(true);
     setSaved(false);
     try {
-      const token = liff.getAccessToken();
+      const idToken = liff.getIDToken();
+      if (!idToken) throw new Error("ไม่พบ ID token — กรุณาเข้าสู่ระบบใหม่");
       const allergens = [
         ...presets
           .filter((p) => selected.has(p.name))
@@ -88,7 +99,7 @@ export default function LiffProfilePage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({ allergens }),
       });
