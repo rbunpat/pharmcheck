@@ -77,6 +77,27 @@ export async function push(to: string, messages: LineMessage[]): Promise<void> {
   }
 }
 
+/**
+ * Show LINE's built-in loading animation ("..." bubble) in a 1:1 chat.
+ *
+ * Only works for 1:1 chats with the user's userId as `chatId` — group and
+ * multi-person chats are not supported. The animation disappears after
+ * `loadingSeconds` (5–60) or as soon as a new message from the OA arrives.
+ *
+ * Best-effort: failures are logged, never thrown, so a scan still completes.
+ */
+export async function showLoadingAnimation(userId: string): Promise<void> {
+  try {
+    const res = await post("/chat/loading/start", { chatId: userId, loadingSeconds: 60 });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error(`LINE loading animation failed (${res.status}): ${text}`);
+    }
+  } catch (err) {
+    console.error("LINE loading animation request threw:", err);
+  }
+}
+
 /** Download the binary content of a user-sent message (e.g. an image). */
 export async function getMessageContent(messageId: string): Promise<Buffer> {
   const res = await fetch(`${LINE_CONTENT_API}/message/${messageId}/content`, {

@@ -4,6 +4,7 @@ import {
   reply,
   push,
   getMessageContent,
+  showLoadingAnimation,
   type LineEvent,
   type LineMessage,
 } from "@/lib/line";
@@ -40,8 +41,13 @@ async function handleEvent(event: LineEvent): Promise<void> {
       if (event.message?.type === "image" && event.message.id) {
         if (!lineUserId || !event.replyToken) break;
         try {
+          // Show LINE's built-in loading animation while the scan runs. Fired in
+          // parallel with the scan so it doesn't delay OCR/FDA/screening; it
+          // clears automatically as soon as the reply message is delivered.
+          const loading = showLoadingAnimation(lineUserId);
           const imageBytes = await getMessageContent(event.message.id);
           const outcome = await runScan(imageBytes, lineUserId);
+          await loading;
           await reply(event.replyToken, [outcome.message as unknown as LineMessage]);
         } catch (err) {
           console.error("Scan pipeline failed:", err);
